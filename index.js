@@ -7,29 +7,17 @@ const axios = require('axios');
 const app = express();
 const PORT = 3005;
 
-// Rate Limiter Configuration
 const limiter = rateLimit({
-    windowMs: 2 * 60 * 1000, // 2 minutes
-    max: 100 // Limit each IP to 100 requests per windowMs
+    windowMs: 2 * 60 * 1000, 
+    max: 100 
 });
 
-// Middleware
 app.use(morgan('combined')); // Logging
 app.use(limiter); // Rate limiting
 
-// Proxy Middleware for Flight Service
-app.use('/flightsService', createProxyMiddleware({ 
-    target: 'https://flight-search-service.onrender.com', 
-    changeOrigin: true,
-    pathRewrite: { '^/flightsService': '/api/v1' }, // Rewrite to match the target service's base path
-    onError: (err, req, res) => {
-        console.error('Proxy error:', err);
-        res.status(500).json({ error: 'Proxy error', details: err.message });
-    }
-}));
 
-// Authentication Middleware for Booking Service
-app.use('/bookingservice', async (req, res, next) => {
+// Authentication Middleware for flightsService Service
+app.use('/flightsService', async (req, res, next) => {
     console.log(req.headers['x-access-token']);
     try {
         const response = await axios.get('http://localhost:3001/api/v1/isAuthenticated', {
@@ -46,18 +34,19 @@ app.use('/bookingservice', async (req, res, next) => {
             });
         }
     } catch (error) {
-        console.error(error); // Log the error for debugging
+        console.error(error); 
         return res.status(401).json({
             message: "Unauthorized User"
         });
     }
 });
 
-// Proxy Middleware for Booking Service
-app.use('/bookingservice', createProxyMiddleware({
-    target: 'http://localhost:3002', // Adjust to the actual target service for booking
+
+// Proxy Middleware for Flight Service
+app.use('/flightsService', createProxyMiddleware({ 
+    target: 'https://flight-search-service.onrender.com', 
     changeOrigin: true,
-    pathRewrite: { '^/bookingservice': '/api/v1' }, // Adjust if necessary
+    pathRewrite: { '^/flightsService': '/api/v1' }, 
     onError: (err, req, res) => {
         console.error('Proxy error:', err);
         res.status(500).json({ error: 'Proxy error', details: err.message });
@@ -66,7 +55,7 @@ app.use('/bookingservice', createProxyMiddleware({
 
 // Home Route
 app.get('/home', (req, res) => {
-    return res.json({ message: 'OK' });
+    return res.json({ message: 'API Gateway IS LIVE check if auth service or flgiht service is down' });
 });
 
 // Start Server
