@@ -4,6 +4,7 @@ const { createProxyMiddleware } = require('http-proxy-middleware');
 const rateLimit = require('express-rate-limit');
 const axios = require('axios');
 const { PORT } = require('./config/serverConfig') || 3005;
+const cors = require('cors');
 
 const app = express();
 
@@ -14,6 +15,7 @@ const limiter = rateLimit({
     max: 100 
 });
 
+app.use(cors());
 app.use(morgan('combined')); // Logging
 app.use(limiter); // Rate limiting
 
