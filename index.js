@@ -3,7 +3,7 @@ const morgan = require('morgan');
 const { createProxyMiddleware } = require('http-proxy-middleware');
 const rateLimit = require('express-rate-limit');
 const axios = require('axios');
-const { PORT } = require('./config/serverConfig') || 3005;
+const { PORT, AUTH_SERVICE_URL, BOOKING_SERVICE_URL, FLIGHT_SERVICE_URL } = require('./config/serverConfig');
 const cors = require('cors');
 
 const app = express();
@@ -23,7 +23,7 @@ app.use(limiter); // Rate limiting
 app.use('/flightsService', async (req, res, next) => {
     console.log(req.headers['x-access-token']);
     try {
-        const response = await axios.get('http://localhost:3001/api/v1/isAuthenticated', {
+        const response = await axios.get(`${AUTH_SERVICE_URL}/api/v1/isAuthenticated`, {
             headers: {
                 'x-access-token': req.headers['x-access-token']
             }
@@ -46,8 +46,7 @@ app.use('/flightsService', async (req, res, next) => {
 
 
 app.use('/flightsService', createProxyMiddleware({ 
-    //target: 'https://flight-search-service.onrender.com', 
-    target : `http://localhost:4001` ,
+    target : FLIGHT_SERVICE_URL,
     changeOrigin: true,
     pathRewrite: { '^/flightsService': '/api/v1' }, 
     onError: (err, req, res) => {
@@ -59,7 +58,7 @@ app.use('/flightsService', createProxyMiddleware({
 
 app.use('/bookingService', async (req, res, next) => {
     try {
-        const response = await axios.get('http://localhost:3001/api/v1/isAuthenticated', {
+        const response = await axios.get(`${AUTH_SERVICE_URL}/api/v1/isAuthenticated`, {
             headers: {
                 'x-access-token': req.headers['x-access-token']
             }
@@ -84,7 +83,7 @@ app.use('/bookingService', async (req, res, next) => {
 
 // Proxy Middleware for Flight Service
 app.use('/bookingService', createProxyMiddleware({ 
-    target: 'http://localhost:2001', 
+    target: BOOKING_SERVICE_URL,
     changeOrigin: true,
     pathRewrite: { '^/bookingService': '/api/v1' }, 
     onError: (err, req, res) => {
@@ -95,7 +94,7 @@ app.use('/bookingService', createProxyMiddleware({
 
 // Proxy Middleware for Flight Service
 app.use('/authService', createProxyMiddleware({ 
-    target: 'http://localhost:3001', 
+    target: AUTH_SERVICE_URL,
     changeOrigin: true,
     pathRewrite: { '^/authService': '/api/v1' }, 
     onError: (err, req, res) => {
